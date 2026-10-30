@@ -1,8 +1,9 @@
 {
-  "name": "dds-mentorship",
+  "name": "automatic-review-examples",
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
