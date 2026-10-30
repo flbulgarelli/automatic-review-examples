@@ -1,4 +1,4 @@
-# dds-mentorship
+# automatic-review-examples
 
 API de ejemplo (Node + Express + TypeScript) para solicitudes de mentoría. Arquitectura en capas (router → controller → service → repo) con persistencia en memoria. El procesamiento automático está detrás de la interfaz `AutomaticReviewerService`; la implementación por defecto (`LlmAutomaticReviewerService`) usa un LLM a través del Vercel AI SDK.
 
@@ -251,3 +251,17 @@ pnpm test
 ```
 
 Los tests inyectan un `AutomaticReviewerService` fake, por lo que no necesitan Ollama ni ninguna API key.
+
+## Docker
+
+Build de la imagen (standalone):
+
+```bash
+# generar lockfile si todavía no existe
+pnpm install
+
+docker build -t automatic-review-examples .
+docker run --rm -p 3000:3000 \
+  -e REVIEWER_IMPL=approve_all \
+  automatic-review-examples
+```
