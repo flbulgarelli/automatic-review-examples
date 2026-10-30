@@ -15,7 +15,7 @@ export class MentorshipController {
     }
   };
 
-  get = (req: Request, res: Response): void => {
+  get = (req: Request<{ id: string }>, res: Response): void => {
     const found = this.service.find(req.params.id);
     if (!found) {
       res.status(404).json({ error: 'not_found' });

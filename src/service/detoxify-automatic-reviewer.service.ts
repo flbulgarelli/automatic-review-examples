@@ -19,7 +19,7 @@ export class DetoxifyAutomaticReviewerService implements AutomaticReviewerServic
 
   async review(req: MentorshipRequest): Promise<Review> {
     const classifier = await this.getClassifier();
-    const results = (await classifier(req.description, { top_k: null })) as Score[];
+    const results = (await classifier(req.description, { top_k: 20 })) as Score[];
     const top = results.reduce((a, b) => (a.score >= b.score ? a : b));
     const decision = classify(top.score);
     return {
@@ -33,7 +33,7 @@ export class DetoxifyAutomaticReviewerService implements AutomaticReviewerServic
     if (!this.classifierPromise) {
       this.classifierPromise = (async () => {
         try {
-          return (await pipeline('text-classification', MODEL)) as TextClassificationPipeline;
+          return (await pipeline('text-classification', MODEL)) as unknown as TextClassificationPipeline;
         } catch (err) {
           this.classifierPromise = undefined;
           throw new ReviewerUnavailableError(
