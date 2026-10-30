@@ -129,13 +129,73 @@ LLM_MODEL=claude-sonnet-4-5
 ANTHROPIC_API_KEY=...
 ```
 
+## Reviewer alternativo: Detoxify (sin LLM)
+
+Como alternativa al LLM, se puede usar un clasificador de toxicidad liviano
+(`unitary/toxic-bert`, ~45 MB, ONNX) que corre dentro del mismo proceso Node
+vía [transformers.js](https://huggingface.co/docs/transformers.js). No genera
+descripciones: sólo clasifica la toxicidad del texto.
+
+> No requiere descarga adicional: la primera invocación descarga el modelo (~45 MB) a la cache local de HuggingFace; las siguientes son instantáneas.
+
+
+```
+REVIEWER_IMPL=detoxify
+```
+
+No requiere `LLM_PROVIDER` ni API keys. `pnpm install` ya trae
+`@huggingface/transformers`.
+
+Prueba rápida:
+
+```bash
+pnpm dev
+# en otra terminal:
+DESC_EN=$(printf 'I want help with my university project! %.0s' {1..20})
+curl -s -X POST http://localhost:3000/mentorship-requests \
+  -H 'content-type: application/json' \
+  -d "{\"email\":\"a@b.com\",\"username\":\"ana\",\"description\":\"$DESC_EN\"}"
+# esperar ~1s (más la descarga del modelo la primera vez)
+curl -s http://localhost:3000/mentorship-requests/<id>
+```
+
+Umbrales (hardcodeados en `src/service/detoxify-automatic-reviewer.service.ts`):
+- `score >= 0.5` → `rechazada`
+- `0.2 <= score < 0.5` → `requiere_revision_manual`
+- `score < 0.2` → `aprobada`
+
+## Reviewer alternativo: approve_all (sin modelo)
+
+Reviewer trivial que aprueba todo. Útil para levantar el proyecto sin Ollama,
+sin API keys y sin descargar modelos — por ejemplo para demos del flujo HTTP
+en una clase o para desarrollar frontend contra la API.
+
+```
+REVIEWER_IMPL=approve_all
+```
+
+Prueba:
+
+```bash
+pnpm dev
+# en otra terminal:
+DESC=$(printf 'Quiero ayuda con mi proyecto final. %.0s' {1..20})
+curl -s -X POST http://localhost:3000/mentorship-requests \
+  -H 'content-type: application/json' \
+  -d "{\"email\":\"a@b.com\",\"username\":\"ana\",\"description\":\"$DESC\",\"language\":\"es\"}"
+# → 201 { "id": "...", "status": "pendiente" }
+
+curl -s http://localhost:3000/mentorship-requests/<id>
+# → status: "aceptada", processada_automaticamente: true
+```
+
 ## Extender con otro reviewer
 
-Implementá `AutomaticReviewerService` (ver `src/service/automatic-reviewer.ts`) y reemplazá la línea en `src/inject.ts`:
+Implementá `AutomaticReviewerService` (ver `src/service/automatic-reviewer.ts`) y agregá un `case` en el `switch` de `buildReviewer` en `src/inject.ts`:
 
 ```ts
-const reviewer = new LlmAutomaticReviewerService(model);
-// → const reviewer = new MyOtherReviewerService(...);
+case 'mi-impl':
+  return new MyOtherReviewerService(...);
 ```
 
 El `MentorshipService` no sabe que existe un LLM: sólo depende de la interfaz.

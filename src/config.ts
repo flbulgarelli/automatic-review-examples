@@ -3,6 +3,9 @@ import 'dotenv/config';
 export const LLM_PROVIDERS = ['ollama', 'openai', 'openai-compatible', 'anthropic'] as const;
 export type LlmProvider = (typeof LLM_PROVIDERS)[number];
 
+export const REVIEWER_IMPLS = ['llm', 'detoxify', 'approve_all'] as const;
+export type ReviewerImpl = (typeof REVIEWER_IMPLS)[number];
+
 export interface LlmConfig {
   provider: LlmProvider;
   model: string;
@@ -13,17 +16,23 @@ export interface LlmConfig {
 
 export interface Config {
   port: number;
+  reviewer: ReviewerImpl;
   llm: LlmConfig;
 }
 
 export function loadConfig(): Config {
-  const raw = process.env.LLM_PROVIDER ?? 'ollama';
-  if (!LLM_PROVIDERS.includes(raw as LlmProvider)) {
-    throw new Error(`Invalid LLM_PROVIDER: ${raw}`);
+  const rawProvider = process.env.LLM_PROVIDER ?? 'ollama';
+  if (!LLM_PROVIDERS.includes(rawProvider as LlmProvider)) {
+    throw new Error(`Invalid LLM_PROVIDER: ${rawProvider}`);
   }
-  const provider = raw as LlmProvider;
+  const rawReviewer = process.env.REVIEWER_IMPL ?? 'llm';
+  if (!REVIEWER_IMPLS.includes(rawReviewer as ReviewerImpl)) {
+    throw new Error(`Invalid REVIEWER_IMPL: ${rawReviewer}`);
+  }
+  const provider = rawProvider as LlmProvider;
   return {
     port: Number(process.env.PORT ?? 3000),
+    reviewer: rawReviewer as ReviewerImpl,
     llm: {
       provider,
       model: process.env.LLM_MODEL ?? defaultModel(provider),

@@ -4,5 +4,8 @@ const { app, config } = buildApp();
 
 app.listen(config.port, () => {
   console.log(`[mentorship] listening on http://localhost:${config.port}`);
-  console.log(`[mentorship] LLM provider: ${config.llm.provider} (${config.llm.model})`);
+  console.log(`[mentorship] reviewer: ${config.reviewer}`);
+  if (config.reviewer === 'llm') {
+    console.log(`[mentorship] LLM provider: ${config.llm.provider} (${config.llm.model})`);
+  }
 });
