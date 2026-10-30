@@ -3,7 +3,7 @@ import 'dotenv/config';
 export const LLM_PROVIDERS = ['ollama', 'openai', 'openai-compatible', 'anthropic'] as const;
 export type LlmProvider = (typeof LLM_PROVIDERS)[number];
 
-export const REVIEWER_IMPLS = ['llm', 'detoxify', 'approve_all'] as const;
+export const REVIEWER_IMPLS = ['llm', 'detoxify', 'approve_all', 'llama_guard'] as const;
 export type ReviewerImpl = (typeof REVIEWER_IMPLS)[number];
 
 export interface LlmConfig {
@@ -14,10 +14,16 @@ export interface LlmConfig {
   anthropicApiKey?: string;
 }
 
+export interface LlamaGuardConfig {
+  model: string;
+  baseUrl: string;
+}
+
 export interface Config {
   port: number;
   reviewer: ReviewerImpl;
   llm: LlmConfig;
+  llamaGuard: LlamaGuardConfig;
 }
 
 export function loadConfig(): Config {
@@ -39,6 +45,10 @@ export function loadConfig(): Config {
       baseUrl: process.env.LLM_BASE_URL,
       openaiApiKey: process.env.OPENAI_API_KEY,
       anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+    },
+    llamaGuard: {
+      model: process.env.LLAMA_GUARD_MODEL ?? 'llama-guard3:1b',
+      baseUrl: process.env.LLAMA_GUARD_BASE_URL ?? 'http://localhost:11434/api',
     },
   };
 }

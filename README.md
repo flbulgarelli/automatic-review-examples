@@ -164,6 +164,50 @@ Umbrales (hardcodeados en `src/service/detoxify-automatic-reviewer.service.ts`):
 - `0.2 <= score < 0.5` → `requiere_revision_manual`
 - `score < 0.2` → `aprobada`
 
+## Reviewer alternativo: Llama-Guard-3-1B (Ollama)
+
+Llama-Guard-3-1B es un modelo chico (1B parámetros) de Meta entrenado
+específicamente para clasificación de seguridad. Devuelve `safe` o
+`unsafe\nS<N>` con la categoría de riesgo. Mapeo:
+
+- `safe` → `aprobada`
+- `unsafe` → `rechazada` (la categoría S1–S14 queda en la explanation)
+- output no parseable → `requiere_revision_manual`
+
+No genera descripciones (es un clasificador puro, no un chat). Cubre
+mejor que Detoxify los criterios "ilegal / dañino" porque tiene categorías
+dedicadas (violencia, hate, privacy, armas, suicidio, etc.), pero sigue
+sin cubrir "vigilancia / derechos democráticos" como tal.
+
+Levantar el modelo en Ollama:
+
+```bash
+ollama serve
+ollama pull llama-guard3:1b
+```
+
+Configurar `.env`:
+
+```
+REVIEWER_IMPL=llama_guard
+LLAMA_GUARD_MODEL=llama-guard3:1b
+LLAMA_GUARD_BASE_URL=http://localhost:11434/api
+```
+
+Prueba:
+
+```bash
+pnpm dev
+# en otra terminal:
+DESC=$(printf 'Quiero ayuda con mi proyecto final de la facultad. %.0s' {1..15})
+curl -s -X POST http://localhost:3000/mentorship-requests \
+  -H 'content-type: application/json' \
+  -d "{\"email\":\"a@b.com\",\"username\":\"ana\",\"description\":\"$DESC\"}"
+
+curl -s http://localhost:3000/mentorship-requests/<id>
+# → status: "aceptada", explanation: "Llama-Guard: safe. (respuesta generada automáticamente)"
+```
+
 ## Reviewer alternativo: approve_all (sin modelo)
 
 Reviewer trivial que aprueba todo. Útil para levantar el proyecto sin Ollama,

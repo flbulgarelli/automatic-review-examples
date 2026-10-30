@@ -9,6 +9,7 @@ import type { AutomaticReviewerService } from './service/automatic-reviewer.js';
 import { LlmAutomaticReviewerService } from './service/llm-automatic-reviewer.service.js';
 import { DetoxifyAutomaticReviewerService } from './service/detoxify-automatic-reviewer.service.js';
 import { ApproveAllAutomaticReviewerService } from './service/approve-all-automatic-reviewer.service.js';
+import { LlamaGuardAutomaticReviewerService } from './service/llama-guard-automatic-reviewer.service.js';
 import { MentorshipController } from './controller/mentorship.controller.js';
 import { buildMentorshipRouter } from './router/mentorship.router.js';
 
@@ -35,5 +36,13 @@ function buildReviewer(cfg: Config): AutomaticReviewerService {
       return new DetoxifyAutomaticReviewerService();
     case 'approve_all':
       return new ApproveAllAutomaticReviewerService();
+    case 'llama_guard': {
+      const model = buildLanguageModel({
+        provider: 'ollama',
+        model: cfg.llamaGuard.model,
+        baseUrl: cfg.llamaGuard.baseUrl,
+      });
+      return new LlamaGuardAutomaticReviewerService(model);
+    }
   }
 }
