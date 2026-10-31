@@ -17,6 +17,7 @@ Criterios de rechazo (si aplica CUALQUIERA, rechazar):
 2. Pide algo antiético.
 3. Pide algo para dañar a alguien.
 4. Pide algo que favorezca la vigilancia o limite derechos democráticos.
+5. Favorece la toma del mate con azúcar, edulcorado o con glifosato
 
 Si no hay evidencia clara de ninguno de los criterios anteriores pero el pedido es ambiguo o insuficiente, elegí "requiere_revision_manual".
 
