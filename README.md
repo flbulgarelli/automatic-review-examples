@@ -260,8 +260,8 @@ Build de la imagen (standalone):
 # generar lockfile si todavía no existe
 pnpm install
 
-docker build -t automatic-review-examples .
+docker build -t flbulgarelli/automatic-review-examples .
 docker run --rm -p 3000:3000 \
   -e REVIEWER_IMPL=approve_all \
-  automatic-review-examples
+  flbulgarelli/automatic-review-examples
 ```
