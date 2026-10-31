@@ -20,8 +20,16 @@ export class DetoxifyAutomaticReviewerService implements AutomaticReviewerServic
   async review(req: MentorshipRequest): Promise<Review> {
     const classifier = await this.getClassifier();
     const results = (await classifier(req.description, { top_k: 20 })) as Score[];
-    const top = results.reduce((a, b) => (a.score >= b.score ? a : b));
+    const scores = [...results].sort((a, b) => b.score - a.score);
+    const top = scores[0];
     const decision = classify(top.score);
+    const summary = scores
+      .map((s) => `${s.label}=${s.score.toFixed(3)}`)
+      .join(', ');
+    console.log(`[detoxify] scores: ${summary}`);
+    console.log(
+      `[detoxify] top=${top.label} score=${top.score.toFixed(3)} decision=${decision}`,
+    );
     return {
       decision,
       explanation: buildExplanation(decision, top),
@@ -31,9 +39,16 @@ export class DetoxifyAutomaticReviewerService implements AutomaticReviewerServic
 
   private getClassifier(): Promise<TextClassificationPipeline> {
     if (!this.classifierPromise) {
+      console.log(`[detoxify] loading model ${MODEL} (first use)…`);
+      const startedAt = Date.now();
       this.classifierPromise = (async () => {
         try {
-          return (await pipeline('text-classification', MODEL)) as unknown as TextClassificationPipeline;
+          const pipe = (await pipeline(
+            'text-classification',
+            MODEL,
+          )) as unknown as TextClassificationPipeline;
+          console.log(`[detoxify] model ready in ${Date.now() - startedAt}ms`);
+          return pipe;
         } catch (err) {
           this.classifierPromise = undefined;
           throw new ReviewerUnavailableError(

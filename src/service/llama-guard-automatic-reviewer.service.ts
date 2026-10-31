@@ -27,11 +27,18 @@ export class LlamaGuardAutomaticReviewerService implements AutomaticReviewerServ
 
   async review(req: MentorshipRequest): Promise<Review> {
     try {
+      const startedAt = Date.now();
       const { text } = await generateText({
         model: this.model,
         messages: [{ role: 'user', content: req.description }],
       });
-      return parseGuardOutput(text, req);
+      const elapsed = Date.now() - startedAt;
+      console.log(`[llama-guard] raw output (${elapsed}ms): ${JSON.stringify(text)}`);
+      const review = parseGuardOutput(text, req);
+      console.log(
+        `[llama-guard] decision=${review.decision} — ${review.explanation}`,
+      );
+      return review;
     } catch (err) {
       if (RetryError.isInstance(err)) {
         throw new ReviewerUnavailableError('No se pudo conectar con Llama-Guard', { cause: err });

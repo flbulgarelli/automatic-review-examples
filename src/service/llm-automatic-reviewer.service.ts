@@ -35,12 +35,20 @@ export class LlmAutomaticReviewerService implements AutomaticReviewerService {
   async review(req: MentorshipRequest): Promise<Review> {
     const userPrompt = buildUserPrompt(req);
     try {
-      const { object } = await generateObject({
+      const startedAt = Date.now();
+      const { object, usage } = await generateObject({
         model: this.model,
         schema: ReviewSchema,
         system: SYSTEM_PROMPT,
         prompt: userPrompt,
       });
+      const elapsed = Date.now() - startedAt;
+      const tokens = usage
+        ? `in=${usage.inputTokens ?? '?'} out=${usage.outputTokens ?? '?'} total=${usage.totalTokens ?? '?'}`
+        : 'usage=n/a';
+      console.log(
+        `[llm-reviewer] decision=${object.decision} lang=${object.language} (${elapsed}ms, tokens ${tokens})`,
+      );
       return object;
     } catch (err) {
       if (RetryError.isInstance(err)) {

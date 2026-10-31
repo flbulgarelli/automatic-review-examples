@@ -3,6 +3,7 @@ import type { MentorshipRequest, Review } from '../model/mentorship.js';
 
 export class ApproveAllAutomaticReviewerService implements AutomaticReviewerService {
   async review(req: MentorshipRequest): Promise<Review> {
+    console.log('[approve-all] auto-approving without any check');
     return {
       decision: 'aprobada',
       explanation: 'Aprobado automáticamente.',
